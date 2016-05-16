@@ -1,0 +1,8 @@
+.field-multilingual_textbox .tab-panel{
+	overflow: hidden;
+}
+
+.field-multilingual_textbox i.invalid {
+	color: #f2dede;
+}
+

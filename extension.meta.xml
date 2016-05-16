@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension id="multilingual_checkbox_field" status="released" xmlns="http://getsymphony.com/schemas/extension/1.0">
+	<name>Field: Multilingual Check Box</name>
+	<description>The multilingual version of Textbox field.</description>
+	<repo type="github">https://github.com/DeuxHuitHuit/multilingual_checkbox_field</repo>
+	<url type="discuss">http://getsymphony.com/discuss/thread//</url>
+
+	<types>
+		<type>Field</type>
+		<type>Field Types</type>
+		<type>Check Box</type>
+		<type>Multilingual</type>
+	</types>
+
+	<authors>
+		<author>
+			<name github="DeuxHuitHuit" symphony="nitriques" twitter="DeuxHuitHuit">Deux Huit Huit</name>
+			<website>https://deuxhuithuit.com</website>
+		</author>
+	</authors>
+
+	<dependencies>
+		<dependency version="2.5">http://github.com/DeuxHuitHuit/frontend_localisation</dependency>
+	</dependencies>
+
+	<releases>
+		<release version="1.0.0" date="2016-05-16" min="2.0.6">
+			- Initial release. Based on the multilingual field
+		</release>
+	</releases>
+</extension>
