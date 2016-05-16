@@ -4,7 +4,7 @@ Multilingual Check Box
 
 ## 1 About
 
-The multilingual version of Check Box field.
+The multilingual version of Checkbox field.
 
 
 

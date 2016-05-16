@@ -25,7 +25,7 @@
 
 	<releases>
 		<release version="1.0.0" date="2016-05-16" min="2.0.6">
-			- Initial release. Based on the multilingual field
+			- Initial release. Based on the multilingual field.
 		</release>
 	</releases>
 </extension>
