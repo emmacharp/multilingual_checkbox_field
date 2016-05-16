@@ -6,7 +6,10 @@
 
 	Class Extension_Multilingual_Checkbox_Field extends Extension {
 
-		const FIELD_TABLE = 'tbl_fields_multilingual_checkbox_field';
+		const FIELD_TABLE = 'tbl_fields_multilingual_checkbox';
+		const PUBLISH_HEADERS = 1;
+		const SETTINGS_HEADERS = 4;
+		private static $appendedHeaders = 0;
 
 		/*------------------------------------------------------------------------------------------------*/
 		/*  Installation  */
@@ -29,7 +32,7 @@
 				CREATE TABLE IF NOT EXISTS `%s` (
 					`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
 					`field_id` INT(11) UNSIGNED NOT NULL,
-					`default_state` ENUM('on', 'off') DEFAULT 'on'
+					`default_state` ENUM('on', 'off') DEFAULT 'on',
 					`description` VARCHAR(255) DEFAULT NULL,
 					`default_main_lang` ENUM('yes', 'no') DEFAULT 'no',
 					`required_languages` VARCHAR(255) DEFAULT NULL,

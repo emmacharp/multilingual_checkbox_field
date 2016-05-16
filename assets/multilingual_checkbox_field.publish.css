@@ -1,8 +1,8 @@
-.field-multilingual_textbox .tab-panel{
+.field-multilingual_checkbox .tab-panel{
 	overflow: hidden;
 }
 
-.field-multilingual_textbox i.invalid {
-	color: #f2dede;
+.field-multilingual_checkbox .invalid label {
+	color: #c31;
 }
 

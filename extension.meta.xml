@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extension id="multilingual_checkbox_field" status="released" xmlns="http://getsymphony.com/schemas/extension/1.0">
-	<name>Field: Multilingual Check Box</name>
+	<name>Field: Multilingual Checkbox</name>
 	<description>The multilingual version of Textbox field.</description>
 	<repo type="github">https://github.com/DeuxHuitHuit/multilingual_checkbox_field</repo>
 	<url type="discuss">http://getsymphony.com/discuss/thread//</url>

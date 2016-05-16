@@ -15,16 +15,13 @@
 		public function __construct() {
 			parent::__construct();
 
-			$this->_name = 'Multilingual Check Box';
+			$this->_name = 'Multilingual Checkbox';
 		}
 
 		public static function generateTableColumns() {
 			$cols = array();
 			foreach (FLang::getLangs() as $lc) {
-				$cols[] = "`handle-{$lc}` VARCHAR(255) DEFAULT NULL,";
-				$cols[] = "`value-{$lc}` TEXT default NULL,";
-				$cols[] = "`value_formatted-{$lc}` TEXT default NULL,";
-				$cols[] = "`word_count-{$lc}` INT(11) UNSIGNED DEFAULT NULL,";
+				$cols[] = " `value-{$lc}` ENUM('yes', 'no') DEFAULT 'no',";
 			}
 			return $cols;
 		}
@@ -32,9 +29,7 @@
 		public static function generateTableKeys() {
 			$keys = array();
 			foreach (FLang::getLangs() as $lc) {
-				$keys[] = "KEY `handle-{$lc}` (`handle-{$lc}`),";
-				$keys[] = "FULLTEXT KEY `value-{$lc}` (`value-{$lc}`),";
-				$keys[] = "FULLTEXT KEY `value_formatted-{$lc}` (`value_formatted-{$lc}`),";
+				$keys[] = " KEY `value-{$lc}` (`value-{$lc}`),";
 			}
 			return $keys;
 		}
@@ -46,23 +41,18 @@
 				CREATE TABLE IF NOT EXISTS `tbl_entries_data_{$field_id}` (
 					`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
 					`entry_id` INT(11) UNSIGNED NOT NULL,
-					`handle` VARCHAR(255) DEFAULT NULL,
-					`value` TEXT DEFAULT NULL,
-					`value_formatted` TEXT DEFAULT NULL,
-					`word_count` INT(11) UNSIGNED DEFAULT NULL,";
+					`value` ENUM('yes', 'no') DEFAULT 'no',";
 
 			$query .= implode('', self::generateTableColumns());
 
 			$query .= "
 					PRIMARY KEY (`id`),
-					UNIQUE KEY `entry_id` (`entry_id`),";
+					UNIQUE KEY `entry_id` (`entry_id`), ";
 
 			$query .= implode('', self::generateTableKeys());
 
 			$query .= "
-					KEY `handle` (`handle`),
-					FULLTEXT KEY `value` (`value`),
-					FULLTEXT KEY `value_formatted` (`value_formatted`)
+					KEY `value` (`value`)
 				) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;";
 
 			return Symphony::Database()->query($query);
@@ -73,85 +63,6 @@
 		/*------------------------------------------------------------------------------------------------*/
 		/*  Utilities  */
 		/*------------------------------------------------------------------------------------------------*/
-
-		public function createHandle($value, $entry_id, $lc = null) {
-			if (!FLang::validateLangCode($lc)) {
-				$lc = FLang::getLangCode();
-			}
-
-			$handle = Lang::createHandle(strip_tags(html_entity_decode($value)));
-
-			if ($this->isHandleLocked($handle, $entry_id, $lc)) {
-				if ($this->isHandleFresh($handle, $value, $entry_id, $lc)) {
-					return $this->getCurrentHandle($entry_id, $lc);
-				}
-
-				else {
-					$count = 2;
-
-					while ($this->isHandleLocked("{$handle}-{$count}", $entry_id, $lc)) {
-						$count++;
-					}
-
-					return "{$handle}-{$count}";
-				}
-			}
-
-			return $handle;
-		}
-
-		public function getCurrentHandle($entry_id, $lc) {
-			return Symphony::Database()->fetchVar('handle', 0, sprintf(
-				"
-					SELECT
-						f.`handle-%s`
-					FROM
-						`tbl_entries_data_%s` AS f
-					WHERE
-						f.entry_id = '%s'
-					LIMIT 1
-				",
-				$lc,
-				$this->get('id'),
-				$entry_id
-			));
-		}
-
-		public function isHandleLocked($handle, $entry_id, $lc) {
-			return (boolean) Symphony::Database()->fetchVar('id', 0, sprintf(
-				"
-					SELECT
-						f.id
-					FROM
-						`tbl_entries_data_%s` AS f
-					WHERE
-						f.`handle-%s` = '%s'
-						%s
-					LIMIT 1
-				",
-				$this->get('id'), $lc, $handle,
-				(!is_null($entry_id) ? "AND f.entry_id != '{$entry_id}'" : '')
-			));
-		}
-
-		public function isHandleFresh($handle, $value, $entry_id, $lc) {
-			return (boolean) Symphony::Database()->fetchVar('id', 0, sprintf(
-				"
-					SELECT
-						f.id
-					FROM
-						`tbl_entries_data_%s` AS f
-					WHERE
-						f.entry_id = '%s'
-						AND f.`value-%s` = '%s'
-						AND f.`handle-%s` = '%s'
-					LIMIT 1
-				",
-				$this->get('id'), $entry_id,
-				$lc, $this->cleanValue(General::sanitize($value)),
-				$lc, $this->cleanValue(General::sanitize($handle))
-			));
-		}
 
 		/**
 		 * Returns required languages for this field.
@@ -206,8 +117,8 @@
 		public function displaySettingsPanel(XMLElement &$wrapper, $errors = null) {
 			parent::displaySettingsPanel($wrapper, $errors);
 
-			Extension_Multilingual_Field::appendHeaders(
-				Extension_Multilingual_Field::SETTINGS_HEADERS
+			Extension_Multilingual_Checkbox_Field::appendHeaders(
+				Extension_Multilingual_Checkbox_Field::SETTINGS_HEADERS
 			);
 
 			/*
@@ -341,8 +252,8 @@
 			}
 
 			Extension_Frontend_Localisation::appendAssets();
-			Extension_Multilingual_Field::appendHeaders(
-				Extension_Multilingual_Field::PUBLISH_HEADERS
+			Extension_Multilingual_Checkbox_Field::appendHeaders(
+				Extension_Multilingual_Checkbox_Field::PUBLISH_HEADERS
 			);
 
 			$main_lang = FLang::getMainLang();
@@ -356,22 +267,13 @@
 			/*  Label  */
 			/*------------------------------------------------------------------------------------------------*/
 
-			$label    = Widget::Label($this->get('label'));
+			$label    = Widget::Label();
 			$title = '';
 			$optional = '';
 			$required_languages = $this->getRequiredLanguages();
 			$required = in_array('all', $required_languages) || count($langs) == count($required_languages);
 
-			$append_dash = false;
-			if ((integer) $this->get('text_length') > 0) {
-				$optional = __('$1 of $2 remaining');
-				$append_dash = true;
-			}
-
 			if (!$required) {
-				if ($append_dash) {
-					$optional .= ' &ndash; ';
-				}
 				
 				if (empty($required_languages)) {
 					$optional .= __('All languages are optional');
@@ -431,60 +333,46 @@
 			/*------------------------------------------------------------------------------------------------*/
 
 			foreach ($langs as $lc) {
+				if (!isset($data["value-$lc"])) {
+					if ($this->get('default_state') == 'on') {
+						$value = 'yes';
+					} else {
+						$value = 'no';
+					}
+				}
+				else {
+					$value = ($data["value-$lc"] === 'yes' ? 'yes' : 'no');
+				}
+				
 				$div = new XMLElement('div', null, array(
 					'class'          => 'tab-panel tab-' . $lc,
 					'data-lang_code' => $lc
 				));
 
 				$element_name = $this->get('element_name');
+				
+				$label = Widget::Label();
 
-				// Input box:
-				if ($this->get('text_size') === 'single') {
-					$input = Widget::Input(
-						"fields{$prefix}[$element_name]{$postfix}[{$lc}]", General::sanitize($data["value-$lc"])
-					);
-
-					###
-					# Delegate: ModifyTextBoxInlineFieldPublishWidget
-					# Description: Allows developers modify the textbox before it is rendered in the publish forms
-					$delegate = 'ModifyTextBoxInlineFieldPublishWidget';
+				$input = Widget::Input(
+					"fields{$prefix}[$element_name]{$postfix}[{$lc}]", 'yes', 'checkbox'
+				);
+				
+				if ($value == 'yes') {
+					$input->setAttribute('checked', 'checked');
 				}
-
-				// Text Box:
-				else {
-					$input = Widget::Textarea(
-						"fields{$prefix}[$element_name]{$postfix}[{$lc}]", 20, 50, General::sanitize($data["value-$lc"])
-					);
-
-					###
-					# Delegate: ModifyTextBoxFullFieldPublishWidget
-					# Description: Allows developers modify the textbox before it is rendered in the publish forms
-					$delegate = 'ModifyTextBoxFullFieldPublishWidget';
-				}
-
-				// Add classes:
-				$classes = array('size-' . $this->get('text_size'));
-
-				if ($this->get('text_formatter') != 'none') {
-					$classes[] = $this->get('text_formatter');
-				}
-
-				$input->setAttributeArray(array(
-					'class'  => implode(' ', $classes),
-					'length' => (integer) $this->get('text_length')
-				));
+				
+				$label->setValue($input->generate(false) . ' ' . $this->get('label'));
 
 				Symphony::ExtensionManager()->notifyMembers(
-					$delegate, '/backend/',
+					'ModifyCheckBoxInlineFieldPublishWidget', '/backend/',
 					array(
 						'field'    => $this,
-						'label'    => $div,
+						'label'    => $label,
 						'input'    => $input,
-						'textarea' => $input
 					)
 				);
 
-				$div->appendChild($input);
+				$div->appendChild($label);
 
 				$container->appendChild($div);
 			}
@@ -517,11 +405,6 @@
 			foreach (FLang::getLangs() as $lc) {
 				$this->set('required', in_array($lc, $required_languages) ? 'yes' : 'no');
 
-				// ignore missing languages
-				if (!isset($data[$lc]) && $entry_id) {
-					continue;
-				}
-
 				// if one language fails, all fail
 				if (self::__OK__ != parent::checkPostFieldData($data[$lc], $file_message, $entry_id)) {
 
@@ -534,7 +417,7 @@
 						$message = $message . $local_msg;
 					}
 
-					$error = self::__ERROR__;
+					$error = self::__MISSING_FIELDS__;
 				}
 			}
 
@@ -563,23 +446,15 @@
 
 				$data = $field_data[$lc];
 
-				$formatted = $this->applyFormatting($data);
-
 				$result = array_merge($result, array(
-					"handle-$lc"          => $this->createHandle($formatted, $entry_id, $lc),
 					"value-$lc"           => (string) $data,
-					"value_formatted-$lc" => $formatted,
-					"word_count-$lc"      => General::countWords($data)
 				));
 
 				// Insert values of default language as default values of the field for compatibility with other extensions 
 				// that watch the values without lang code.
 				if (FLang::getMainLang() == $lc) {
 					$result = array_merge($result, array(
-						'handle'          => $this->createHandle($formatted, $entry_id, $lc),
 						'value'           => (string) $data,
-						'value_formatted' => $formatted,
-						'word_count'      => General::countWords($data)
 					));
 				}
 			}
@@ -589,10 +464,7 @@
 
 				foreach ($missing_langs as $lc) {
 					$result = array_merge($result, array(
-						"handle-$lc"          => $crt_data["handle-$lc"],
 						"value-$lc"           => $crt_data["value-$lc"],
-						"value_formatted-$lc" => $crt_data["value_formatted-$lc"],
-						"word_count-$lc"      => $crt_data["word_count-$lc"]
 					));
 				}
 			}
@@ -646,10 +518,7 @@
 				$all = new XMLElement($this->get('element_name'), null, array('mode' => $mode));
 
 				foreach (FLang::getLangs() as $lc) {
-					$data['handle']          = $data["handle-$lc"];
 					$data['value']           = $data["value-$lc"];
-					$data['value_formatted'] = $data["value_formatted-$lc"];
-					$data['word_count']      = $data["word_count-$lc"];
 
 					$item = new XMLElement('item', null, array('lang' => $lc));
 
@@ -681,10 +550,7 @@
 					$lc = FLang::getMainLang();
 				}
 
-				$data['handle']          = $data["handle-$lc"];
 				$data['value']           = $data["value-$lc"];
-				$data['value_formatted'] = $data["value_formatted-$lc"];
-				$data['word_count']      = $data["word_count-$lc"];
 
 				parent::appendFormattedElement($wrapper, $data, $encode, $mode);
 
@@ -692,12 +558,6 @@
 
 				if (!is_null($elem)) {
 					$elem->setAttribute('lang', $lc);
-
-					if ($this->get('text_handle') === 'yes') {
-						foreach (FLang::getLangs() as $lc) {
-							$elem->setAttribute("handle-$lc", $data["handle-$lc"]);
-						}
-					}
 				}
 			}
 		}
@@ -707,7 +567,6 @@
 			$lc = $this->getLang($data);
 
 			$data['value']           = $data["value-$lc"];
-			$data['value_formatted'] = $data["value_formatted-$lc"];
 
 			return parent::prepareTableValue($data, $link);
 		}
@@ -747,16 +606,7 @@
 		public function getExampleFormMarkup() {
 			$label = Widget::Label($this->get('label'));
 
-			if ($this->get('text_size') === 'single') {
-				foreach (FLang::getLangs() as $lc) {
-					$label->appendChild(Widget::Input("fields[{$this->get('element_name')}][{$lc}]"));
-				}
-			}
-			else {
-				foreach (FLang::getLangs() as $lc) {
-					$label->appendChild(Widget::Textarea("fields[{$this->get('element_name')}][{$lc}]", 20, 50));
-				}
-			}
+			$label->appendChild(Widget::Input("fields[{$this->get('element_name')}][{$lc}]", null, 'checkbox'));
 
 			return $label;
 		}
@@ -765,45 +615,23 @@
 			$modes = (object)$this->getExportModes();
 			$lc = $this->getLang();
 
-			// Export handles:
-			if ($mode === $modes->getHandle) {
-				if (isset($data["handle-$lc"])) {
-					return $data["handle-$lc"];
-				}
-				else if (isset($data['handle'])) {
-					return $data['handle'];
-				}
-				else if (isset($data["value-$lc"])) {
-					return General::createHandle($data["value-$lc"]);
-				}
-				else if (isset($data['value'])) {
-					return General::createHandle($data['value']);
-				}
-			}
-
-			// Export unformatted:
-			else if ($mode === $modes->getUnformatted || $mode === $modes->getPostdata) {
+			// Export boolean:
+			if ($mode === $modes->getBoolean) {
 				if (isset($data["value-$lc"])) {
-					return $data["value-$lc"];
-				}
-				return isset($data['value'])
-					? $data['value']
-					: null;
-			}
-
-			// Export formatted:
-			else if ($mode === $modes->getFormatted) {
-				if (isset($data["value_formatted-$lc"])) {
-					return $data["value_formatted-$lc"];
-				}
-				if (isset($data['value_formatted'])) {
-					return $data['value_formatted'];
-				}
-				else if (isset($data["value-$lc"])) {
-					return General::sanitize($data["value-$lc"]);
+					return $data["value-$lc"] == 'yes';
 				}
 				else if (isset($data['value'])) {
-					return General::sanitize($data['value']);
+					return $data['value'] == 'yes';
+				}
+			}
+
+			// Export 
+			else {
+				if (isset($data["value-$lc"])) {
+					return $data["value-$lc"] == 'yes' ? 'yes' : 'no';
+				}
+				else if (isset($data['value'])) {
+					return $data['value'] == 'yes' ? 'yes' : 'no';
 				}
 			}
 
@@ -825,7 +653,6 @@
 			
 			if ($lc) {
 				$multi_where = str_replace('.value', ".`value-$lc`", $multi_where);
-				$multi_where = str_replace('.handle', ".`handle-$lc`", $multi_where);
 			}
 
 			$where .= $multi_where;
@@ -853,7 +680,7 @@
 						FROM tbl_entries_data_%d
 						WHERE entry_id = e.id
 					) %s',
-					"handle-$lc",
+					"value-$lc",
 					$this->get('id'),
 					$order
 				);
@@ -877,13 +704,13 @@
 			foreach ($records as $record) {
 				$data = $record->getData($this->get('id'));
 
-				$handle  = $data["handle-$lc"];
+				$handle  = $data["value-$lc"];
 				$element = $this->get('element_name');
 
 				if (!isset($groups[$element][$handle])) {
 					$groups[$element][$handle] = array(
 						'attr'    => array(
-							'handle' => $handle
+							'value' => $handle
 						),
 						'records' => array(),
 						'groups'  => array()
@@ -913,7 +740,5 @@
 
 			$f->appendChild($required);
 		}
-//		public function prepareImportValue($data, $mode, $entry_id = null) {
-//
-//		}
+
 	}

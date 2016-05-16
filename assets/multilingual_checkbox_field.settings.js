@@ -47,7 +47,7 @@
 	};
 
 	$(function () {
-		$('.field-multilingual_textbox.instance select[name*="[required_languages]"]')
+		$('.field-multilingual_checkbox.instance select[name*="[required_languages]"]')
 			.on('change', change)
 			.trigger('change');
 	});
