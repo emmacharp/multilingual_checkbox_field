@@ -12,13 +12,15 @@
 		/*  Definition  */
 		/*------------------------------------------------------------------------------------------------*/
 
-		public function __construct() {
+		public function __construct()
+		{
 			parent::__construct();
 
 			$this->_name = 'Multilingual Checkbox';
 		}
 
-		public static function generateTableColumns() {
+		public static function generateTableColumns()
+		{
 			$cols = array();
 			foreach (FLang::getLangs() as $lc) {
 				$cols[] = " `value-{$lc}` ENUM('yes', 'no') DEFAULT 'no',";
@@ -26,7 +28,8 @@
 			return $cols;
 		}
 
-		public static function generateTableKeys() {
+		public static function generateTableKeys()
+		{
 			$keys = array();
 			foreach (FLang::getLangs() as $lc) {
 				$keys[] = " KEY `value-{$lc}` (`value-{$lc}`),";
@@ -34,7 +37,8 @@
 			return $keys;
 		}
 
-		public function createTable() {
+		public function createTable()
+		{
 			$field_id = $this->get('id');
 
 			$query = "
@@ -58,7 +62,50 @@
 			return Symphony::Database()->query($query);
 		}
 
+		public function canToggle()
+		{
+			return true;
+		}
 
+		public function getToggleStates()
+		{
+			$all_langs = FLang::getAllLangs();
+			$values = array(
+				'all:yes' => __('All languages: ') . __('Yes'),
+				'all:no' => __('All languages: ') . __('No')
+			);
+			foreach (FLang::getLangs() as $lc) {
+				$values["$lc:yes"] = $all_langs[$lc] . ': ' . __('Yes');
+				$values["$lc:no"] = $all_langs[$lc] . ': ' . __('No');
+			}
+			return $values;
+		}
+
+		public function toggleFieldData(array $data, $newState, $entry_id = null)
+		{
+			list($lc, $value) = explode(':', $newState, 2);
+			
+			if ($lc == 'all') {
+				foreach ($data as $key => $d) {
+					$data[$key] = $value;
+				}
+			}
+			else if ($value == null) {
+				$value = $lc;
+				$lc = $this->getLang();
+				$data["value-$lc"] = $value;
+				if ($lc === FLang::getMainLang()) {
+					$data['value'] = $value;
+				}
+			}
+			else {
+				$data["value-$lc"] = $value;
+				if ($lc === FLang::getMainLang()) {
+					$data['value'] = $value;
+				}
+			}
+			return $data;
+		}
 
 		/*------------------------------------------------------------------------------------------------*/
 		/*  Utilities  */
@@ -67,7 +114,8 @@
 		/**
 		 * Returns required languages for this field.
 		 */
-		public function getRequiredLanguages() {
+		public function getRequiredLanguages()
+		{
 			$required = $this->get('required_languages');
 
 			$languages = FLang::getLangs();
@@ -92,13 +140,15 @@
 		/*  Settings  */
 		/*------------------------------------------------------------------------------------------------*/
 
-		public function findDefaults(array &$settings) {
+		public function findDefaults(array &$settings)
+		{
 			parent::findDefaults($settings);
 
 			$settings['default_main_lang'] = 'no';
 		}
 
-		public function set($field, $value) {
+		public function set($field, $value)
+		{
 			if ($field == 'required_languages' && !is_array($value)) {
 				$value = array_filter(explode(',', $value));
 			}
@@ -106,7 +156,8 @@
 			$this->_settings[$field] = $value;
 		}
 
-		public function get($field = null) {
+		public function get($field = null)
+		{
 			if ($field == 'required_languages') {
 				return (array) parent::get($field);
 			}
@@ -114,7 +165,8 @@
 			return parent::get($field);
 		}
 
-		public function displaySettingsPanel(XMLElement &$wrapper, $errors = null) {
+		public function displaySettingsPanel(XMLElement &$wrapper, $errors = null)
+		{
 			parent::displaySettingsPanel($wrapper, $errors);
 
 			Extension_Multilingual_Checkbox_Field::appendHeaders(
@@ -151,7 +203,8 @@
 			$wrapper->appendChild($two_columns);
 		}
 
-		private function settingsDefaultMainLang(XMLElement &$wrapper) {
+		private function settingsDefaultMainLang(XMLElement &$wrapper)
+		{
 			$name = "fields[{$this->get('sortorder')}][default_main_lang]";
 
 			$wrapper->appendChild(Widget::Input($name, 'no', 'hidden'));
@@ -169,7 +222,8 @@
 			$wrapper->appendChild($label);
 		}
 
-		private function settingsRequiredLanguages(XMLElement &$wrapper) {
+		private function settingsRequiredLanguages(XMLElement &$wrapper)
+		{
 			$name = "fields[{$this->get('sortorder')}][required_languages][]";
 
 			$required_languages = $this->get('required_languages');
@@ -197,7 +251,8 @@
 			$wrapper->appendChild($label);
 		}
 
-		public function commit() {
+		public function commit()
+		{
 			$required_languages = $this->get('required_languages');
 
 			// all are required
@@ -243,8 +298,8 @@
 		/*  Publish  */
 		/*------------------------------------------------------------------------------------------------*/
 
-		public function displayPublishPanel(&$wrapper, $data = null, $error = null, $prefix = null, $postfix = null) {
-
+		public function displayPublishPanel(&$wrapper, $data = null, $error = null, $prefix = null, $postfix = null)
+		{
 			// We've been called out of context: Publish Filter
 			$callback = Administration::instance()->getPageCallback();
 			if (!in_array($callback['context']['page'], array('edit', 'new'))) {
@@ -395,7 +450,8 @@
 		/*  Input  */
 		/*------------------------------------------------------------------------------------------------*/
 
-		public function checkPostFieldData($data, &$message, $entry_id = null) {
+		public function checkPostFieldData($data, &$message, $entry_id = null)
+		{
 			$error              = self::__OK__;
 			$all_langs          = FLang::getAllLangs();
 			$main_lang          = FLang::getMainLang();
@@ -426,7 +482,8 @@
 			return $error;
 		}
 
-		public function processRawFieldData($data, &$status, &$message = null, $simulate = false, $entry_id = null) {
+		public function processRawFieldData($data, &$status, &$message = null, $simulate = false, $entry_id = null)
+		{
 			if (!is_array($data)) {
 				$data = array();
 			}
@@ -472,7 +529,8 @@
 			return $result;
 		}
 
-		private function getCurrentData($entry_id) {
+		private function getCurrentData($entry_id)
+		{
 			$query = sprintf(
 				'SELECT * FROM `tbl_entries_data_%d`
 				WHERE `entry_id` = %d',
@@ -489,7 +547,8 @@
 		/*  Output  */
 		/*------------------------------------------------------------------------------------------------*/
 
-		public function fetchIncludableElements() {
+		public function fetchIncludableElements()
+		{
 			$parent_elements     = parent::fetchIncludableElements();
 			$includable_elements = $parent_elements;
 
@@ -503,8 +562,8 @@
 			return $includable_elements;
 		}
 
-		public function appendFormattedElement(XMLElement &$wrapper, $data, $encode = false, $mode = null) {
-
+		public function appendFormattedElement(XMLElement &$wrapper, $data, $encode = false, $mode = null)
+		{
 			// all-languages
 			$all_languages = strpos($mode, 'all-languages');
 
@@ -562,21 +621,15 @@
 			}
 		}
 
-		// @todo: remove and fallback to default (Symphony 2.5 only?)
-		public function prepareTableValue($data, XMLElement $link = null) {
+		public function prepareTextValue($data, $entry_id = null)
+		{
 			$lc = $this->getLang($data);
-
-			$data['value']           = $data["value-$lc"];
-
-			return parent::prepareTableValue($data, $link);
-		}
-
-		public function prepareTextValue($data, $entry_id = null) {
-			$lc = $this->getLang($data);
-			return strip_tags($data["value-$lc"]);
+			$data['value'] = $data["value-$lc"];
+			return parent::prepareTextValue($data, $entry_id);
 		}
 		
-		protected function getLang($data = null) {
+		protected function getLang($data = null)
+		{
 			$required_languages = $this->getRequiredLanguages();
 			$lc = Lang::get();
 
@@ -598,12 +651,14 @@
 			return $lc;
 		}
 
-		public function getParameterPoolValue($data) {
+		public function getParameterPoolValue($data)
+		{
 			$lc = $this->getLang();
 			return $data["value-$lc"];
 		}
 
-		public function getExampleFormMarkup() {
+		public function getExampleFormMarkup()
+		{
 			$label = Widget::Label($this->get('label'));
 
 			$label->appendChild(Widget::Input("fields[{$this->get('element_name')}][{$lc}]", null, 'checkbox'));
@@ -611,31 +666,11 @@
 			return $label;
 		}
 
-		public function prepareExportValue($data, $mode, $entry_id = null) {
-			$modes = (object)$this->getExportModes();
-			$lc = $this->getLang();
-
-			// Export boolean:
-			if ($mode === $modes->getBoolean) {
-				if (isset($data["value-$lc"])) {
-					return $data["value-$lc"] == 'yes';
-				}
-				else if (isset($data['value'])) {
-					return $data['value'] == 'yes';
-				}
-			}
-
-			// Export 
-			else {
-				if (isset($data["value-$lc"])) {
-					return $data["value-$lc"] == 'yes' ? 'yes' : 'no';
-				}
-				else if (isset($data['value'])) {
-					return $data['value'] == 'yes' ? 'yes' : 'no';
-				}
-			}
-
-			return null;
+		public function prepareExportValue($data, $mode, $entry_id = null)
+		{
+			$lc = $this->getLang($data);
+			$data['value'] = $data["value-$lc"];
+			return parent::prepareExportValue($data, $mode, $entry_id);
 		}
 
 
@@ -644,7 +679,8 @@
 		/*  Filtering  */
 		/*------------------------------------------------------------------------------------------------*/
 
-		public function buildDSRetrievalSQL($data, &$joins, &$where, $andOperation = false) {
+		public function buildDSRetrievalSQL($data, &$joins, &$where, $andOperation = false)
+		{
 			$multi_where = '';
 
 			parent::buildDSRetrievalSQL($data, $joins, $multi_where, $andOperation);
@@ -666,7 +702,8 @@
 			Sorting:
 		-------------------------------------------------------------------------*/
 
-		public function buildSortingSQL(&$joins, &$where, &$sort, $order = 'ASC') {
+		public function buildSortingSQL(&$joins, &$where, &$sort, $order = 'ASC')
+		{
 			$lc = FLang::getLangCode();
 			
 			if (in_array(strtolower($order), array('random', 'rand'))) {
@@ -694,7 +731,8 @@
 		/*  Grouping  */
 		/*------------------------------------------------------------------------------------------------*/
 
-		public function groupRecords($records) {
+		public function groupRecords($records)
+		{
 			$lc = FLang::getLangCode();
 
 			$groups = array(
@@ -729,7 +767,8 @@
 		/*  Field schema  */
 		/*------------------------------------------------------------------------------------------------*/
 
-		public function appendFieldSchema(XMLElement $f) {
+		public function appendFieldSchema(XMLElement $f)
+		{
 			$required_languages = $this->getRequiredLanguages();
 
 			$required = new XMLElement('required-languages');
