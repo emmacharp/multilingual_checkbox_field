@@ -492,16 +492,9 @@
 			$result     = array();
 			$field_data = $data;
 
-			$missing_langs = array();
-
 			foreach (FLang::getLangs() as $lc) {
 
-				if (!isset($field_data[$lc])) {
-					$missing_langs[] = $lc;
-					continue;
-				}
-
-				$data = $field_data[$lc];
+				$data = in_array($field_data[$lc], array('yes', 'no')) ? $field_data[$lc] : null;
 
 				$result = array_merge($result, array(
 					"value-$lc"           => (string) $data,
@@ -512,16 +505,6 @@
 				if (FLang::getMainLang() == $lc) {
 					$result = array_merge($result, array(
 						'value'           => (string) $data,
-					));
-				}
-			}
-
-			if (!empty($missing_langs) && $entry_id) {
-				$crt_data = $this->getCurrentData($entry_id);
-
-				foreach ($missing_langs as $lc) {
-					$result = array_merge($result, array(
-						"value-$lc"           => $crt_data["value-$lc"],
 					));
 				}
 			}
