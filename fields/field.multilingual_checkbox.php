@@ -298,7 +298,7 @@
 		/*  Publish  */
 		/*------------------------------------------------------------------------------------------------*/
 
-		public function displayPublishPanel(&$wrapper, $data = null, $error = null, $prefix = null, $postfix = null)
+		public function displayPublishPanel(XMLElement &$wrapper, $data = null, $flagWithError = null, $fieldnamePrefix = null, $fieldnamePostfix = null, $entry_id = null)
 		{
 			// We've been called out of context: Publish Filter
 			$callback = Administration::instance()->getPageCallback();
@@ -545,7 +545,7 @@
 			return $includable_elements;
 		}
 
-		public function appendFormattedElement(XMLElement &$wrapper, $data, $encode = false, $mode = null)
+		public function appendFormattedElement(XMLElement &$wrapper, $data, $encode = false, $mode = null, $entry_id = null)
 		{
 			// all-languages
 			$all_languages = strpos($mode, 'all-languages');
@@ -634,7 +634,7 @@
 			return $lc;
 		}
 
-		public function getParameterPoolValue($data)
+		public function getParameterPoolValue(array $data, $entry_id = null)
 		{
 			$lc = $this->getLang();
 			return $data["value-$lc"];
