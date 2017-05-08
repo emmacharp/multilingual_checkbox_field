@@ -84,7 +84,7 @@
 		public function toggleFieldData(array $data, $newState, $entry_id = null)
 		{
 			list($lc, $value) = explode(':', $newState, 2);
-			
+
 			if ($lc == 'all') {
 				foreach ($data as $key => $d) {
 					$data[$key] = $value;
@@ -329,7 +329,7 @@
 			$required = in_array('all', $required_languages) || count($langs) == count($required_languages);
 
 			if (!$required) {
-				
+
 				if (empty($required_languages)) {
 					$optional .= __('All languages are optional');
 				} else {
@@ -339,7 +339,7 @@
 							$optional_langs[] = $all_langs[$lang];
 						}
 					}
-					
+
 					foreach ($optional_langs as $idx => $lang) {
 						$optional .= ' ' . __($lang);
 						if ($idx < count($optional_langs) - 2) {
@@ -377,7 +377,7 @@
 
 			$ul = new XMLElement('ul', null, array('class' => 'tabs'));
 			foreach ($langs as $lc) {
-				$li = new XMLElement('li', $all_langs[$lc], array('class' => $lc));
+				$li = new XMLElement('li', $lc, array('class' => $lc));
 				$lc === $main_lang ? $ul->prependChild($li) : $ul->appendChild($li);
 			}
 
@@ -398,7 +398,7 @@
 				else {
 					$value = ($data["value-$lc"] === 'yes' ? 'yes' : 'no');
 				}
-				
+
 				$div = new XMLElement('div', null, array(
 					'class'          => 'tab-panel tab-' . $lc,
 					'data-lang_code' => $lc
@@ -490,7 +490,7 @@
 					"value-$lc"           => (string) $data,
 				));
 
-				// Insert values of default language as default values of the field for compatibility with other extensions 
+				// Insert values of default language as default values of the field for compatibility with other extensions
 				// that watch the values without lang code.
 				if (FLang::getMainLang() == $lc) {
 					$result = array_merge($result, array(
@@ -600,7 +600,7 @@
 			$data['value'] = $data["value-$lc"];
 			return parent::prepareTextValue($data, $entry_id);
 		}
-		
+
 		protected function getLang($data = null)
 		{
 			$required_languages = $this->getRequiredLanguages();
@@ -659,7 +659,7 @@
 			parent::buildDSRetrievalSQL($data, $joins, $multi_where, $andOperation);
 
 			$lc = FLang::getLangCode();
-			
+
 			if ($lc) {
 				$multi_where = str_replace('.value', ".`value-$lc`", $multi_where);
 			}
@@ -678,7 +678,7 @@
 		public function buildSortingSQL(&$joins, &$where, &$sort, $order = 'ASC')
 		{
 			$lc = FLang::getLangCode();
-			
+
 			if (in_array(strtolower($order), array('random', 'rand'))) {
 				$sort = 'ORDER BY RAND()';
 			}

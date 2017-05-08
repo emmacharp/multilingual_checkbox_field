@@ -70,10 +70,6 @@
 			) {
 				$page = Administration::instance()->Page;
 
-				if ($type === self::PUBLISH_HEADERS) {
-					$page->addStylesheetToHead(URL . '/extensions/multilingual_checkbox_field/assets/multilingual_checkbox_field.publish.css', 'screen');
-				}
-
 				if ($type === self::SETTINGS_HEADERS) {
 					$page->addScriptToHead(URL . '/extensions/multilingual_checkbox_field/assets/multilingual_checkbox_field.settings.js');
 				}
