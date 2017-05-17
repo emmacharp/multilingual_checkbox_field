@@ -675,7 +675,7 @@
 			Sorting:
 		-------------------------------------------------------------------------*/
 
-		public function buildSortingSQL(&$joins, &$where, &$sort, $order = 'ASC')
+		public function buildSortingSQL(&$joins, &$where, &$sort, $order = 'ASC', &$select = NULL)
 		{
 			$lc = FLang::getLangCode();
 
