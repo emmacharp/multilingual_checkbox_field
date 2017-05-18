@@ -144,12 +144,17 @@
 		 * @param array $context
 		 */
 		public function dFLSavePreferences($context) {
-			if ($fields = Symphony::Database()->fetch(sprintf("SELECT `field_id` FROM `%s`", self::FIELD_TABLE))) {
+			$fields = Symphony::Database()->fetch(sprintf(
+				'SELECT `field_id` FROM `%s`',
+				self::FIELD_TABLE
+			));
+
+			if (is_array($fields) && !empty($fields)) {
 				$new_languages = $context['new_langs'];
 
 				// Foreach field check multilanguage values foreach language
 				foreach ($fields as $field) {
-					$entries_table = "tbl_entries_data_{$field["field_id"]}";
+					$entries_table = 'tbl_entries_data_'.$field["field_id"];
 
 					try {
 						$current_columns = Symphony::Database()->fetch("SHOW COLUMNS FROM `$entries_table` LIKE 'value-%';");
@@ -165,7 +170,7 @@
 					$valid_columns = array();
 
 					// Remove obsolete fields
-					if ($current_columns) {
+					if ($current_columns && !empty($current_columns)) {
 						$consolidate = $_POST['settings']['multilingual_checkbox_field']['consolidate'] === 'yes';
 
 						foreach ($current_columns as $column) {
