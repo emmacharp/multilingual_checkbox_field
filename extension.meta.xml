@@ -20,7 +20,7 @@
 	</authors>
 
 	<dependencies>
-		<dependency version="2.6.x">https://github.com/DeuxHuitHuit/frontend_localisation</dependency>
+		<dependency version="2.6.x">frontend_localisation</dependency>
 	</dependencies>
 
 	<releases>
