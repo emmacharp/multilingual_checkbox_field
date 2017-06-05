@@ -156,7 +156,7 @@
 					$entries_table = "tbl_entries_data_{$field["field_id"]}";
 
 					try {
-						$current_columns = Symphony::Database()->fetch("SHOW COLUMNS FROM `$entries_table` LIKE 'handle-%';");
+						$current_columns = Symphony::Database()->fetch("SHOW COLUMNS FROM `$entries_table` LIKE 'value-%';");
 					} catch (DatabaseException $dbe) {
 						// Field doesn't exist. Better remove it's settings
 						Symphony::Database()->query(sprintf(
@@ -175,16 +175,17 @@
 						foreach ($current_columns as $column) {
 							$column_name = $column['Field'];
 
-							$lc = str_replace('handle-', '', $column_name);
+							$lc = str_replace('value-', '', $column_name);
 
 							// If not consolidate option AND column lang_code not in supported languages codes -> drop Column
 							if (!$consolidate && !in_array($lc, $new_languages)) {
 								Symphony::Database()->query(
 									"ALTER TABLE `$entries_table`
-										DROP COLUMN `handle-$lc`,
-										DROP COLUMN `value-$lc`,
-										DROP COLUMN `value_formatted-$lc`,
-										DROP COLUMN `word_count-$lc`;"
+										DROP KEY `value-$lc`;"
+								);
+								Symphony::Database()->query(
+									"ALTER TABLE `$entries_table`
+										DROP COLUMN `value-$lc`;"
 								);
 							}
 							else {
@@ -196,14 +197,11 @@
 					// Add new fields
 					foreach ($new_languages as $lc) {
 						// if columns for language don't exist, create them
-
-						if (!in_array("handle-$lc", $valid_columns)) {
+						if (!in_array("value-$lc", $valid_columns)) {
 							Symphony::Database()->query(
 								"ALTER TABLE `$entries_table`
-									ADD COLUMN `handle-$lc` varchar(255) default NULL,
-									ADD COLUMN `value-$lc` text default NULL,
-									ADD COLUMN `value_formatted-$lc` text default NULL,
-									ADD COLUMN `word_count-$lc` int(11) default NULL;"
+									ADD COLUMN `value-$lc` ENUM('yes', 'no') DEFAULT 'no',
+									ADD KEY `value-{$lc}` (`value-{$lc}`);"
 							);
 						}
 					}
