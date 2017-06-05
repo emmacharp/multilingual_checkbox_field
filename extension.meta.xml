@@ -24,6 +24,10 @@
 	</dependencies>
 
 	<releases>
+		<release version="1.0.3" date="2017-06-05" min="2.6.x" max="2.x.x">
+			- Make sure consolidate value does not end up in config.php
+			- Fix the bad copy/paste of `dFLSavePreferences` from Multilingual Text Box (#3)
+		</release>
 		<release version="1.0.2" date="2016-08-04" min="2.6.x" max="2.x.x">
 			- Supported on PHP 7.
 			- Fixed parameter to fit the parent method.
