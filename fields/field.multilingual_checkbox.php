@@ -405,18 +405,8 @@
 				));
 
 				$element_name = $this->get('element_name');
-				
-				$label = Widget::Label();
 
-				$input = Widget::Input(
-					"fields{$prefix}[$element_name]{$postfix}[{$lc}]", 'yes', 'checkbox'
-				);
-				
-				if ($value == 'yes') {
-					$input->setAttribute('checked', 'checked');
-				}
-				
-				$label->setValue($input->generate(false) . ' ' . $this->get('label'));
+				$label = Widget::Checkbox("fields{$prefix}[$element_name]{$postfix}[{$lc}]", $value, $this->get('label'));
 
 				Symphony::ExtensionManager()->notifyMembers(
 					'ModifyCheckBoxInlineFieldPublishWidget', '/backend/',
@@ -436,8 +426,8 @@
 			/*  Errors  */
 			/*------------------------------------------------------------------------------------------------*/
 
-			if ($error != null) {
-				$wrapper->appendChild(Widget::Error($container, $error));
+			if ($flagWithError != null) {
+				$wrapper->appendChild(Widget::Error($container, $flagWithError));
 			}
 			else {
 				$wrapper->appendChild($container);
