@@ -23,7 +23,11 @@
 		{
 			$cols = array();
 			foreach (FLang::getLangs() as $lc) {
-				$cols[] = " `value-{$lc}` ENUM('yes', 'no') DEFAULT 'no',";
+				$cols['value-' . $lc] = [
+					'type' => 'enum',
+					'values' => ['yes', 'no'],
+					'default' => 'no',
+				];
 			}
 			return $cols;
 		}
@@ -32,34 +36,37 @@
 		{
 			$keys = array();
 			foreach (FLang::getLangs() as $lc) {
-				$keys[] = " KEY `value-{$lc}` (`value-{$lc}`),";
+				$keys['value-' . $lc] = 'key';
 			}
 			return $keys;
 		}
 
 		public function createTable()
 		{
-			$field_id = $this->get('id');
-
-			$query = "
-				CREATE TABLE IF NOT EXISTS `tbl_entries_data_{$field_id}` (
-					`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-					`entry_id` INT(11) UNSIGNED NOT NULL,
-					`value` ENUM('yes', 'no') DEFAULT 'no',";
-
-			$query .= implode('', self::generateTableColumns());
-
-			$query .= "
-					PRIMARY KEY (`id`),
-					UNIQUE KEY `entry_id` (`entry_id`), ";
-
-			$query .= implode('', self::generateTableKeys());
-
-			$query .= "
-					KEY `value` (`value`)
-				) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;";
-
-			return Symphony::Database()->query($query);
+			return Symphony::Database()
+				->create('tbl_entries_data_' . $this->get('id'))
+				->ifNotExists()
+				->charset('utf8')
+				->collate('utf8_unicode_ci')
+				->fields(array_merge([
+					'id' => [
+						'type' => 'int(11)',
+						'auto' => true,
+					],
+					'entry_id' => 'int(11)',
+					'value' => [
+						'type' => 'enum',
+						'values' => ['yes', 'no'],
+						'default' => 'no',
+					],
+				], self::generateTableColumns()))
+				->keys(array_merge([
+					'id' => 'primary',
+					'entry_id' => 'unique',
+					'value' => 'key',
+				], self::generateTableKeys()))
+				->execute()
+				->success();
 		}
 
 		public function canToggle()
@@ -277,19 +284,17 @@
 				return false;
 			}
 
-			return Symphony::Database()->query(sprintf("
-				UPDATE
-					`tbl_fields_%s`
-				SET
-					`default_main_lang` = '%s',
-					`required_languages` = '%s'
-				WHERE
-					`field_id` = '%s';",
-				$this->handle(),
-				$this->get('default_main_lang') === 'yes' ? 'yes' : 'no',
-				implode(',', $this->get('required_languages')),
-				$this->get('id')
-			));
+			return Symphony::Database()
+				->update('tbl_fields_' . $this->handle())
+				->set([
+					'default_main_lang' => $this->get('default_main_lang') === 'yes' ? 'yes' : 'no',
+					'required_languages' => implode(',', $this->get('required_languages')),
+				])
+				->where([
+					'field_id' => $this->get('id'),
+				])
+				->execute()
+				->success();
 		}
 
 

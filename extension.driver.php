@@ -28,26 +28,50 @@
 		}
 
 		private function createFieldTable() {
-			return Symphony::Database()->query(sprintf("
-				CREATE TABLE IF NOT EXISTS `%s` (
-					`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-					`field_id` INT(11) UNSIGNED NOT NULL,
-					`default_state` ENUM('on', 'off') DEFAULT 'on',
-					`description` VARCHAR(255) DEFAULT NULL,
-					`default_main_lang` ENUM('yes', 'no') DEFAULT 'no',
-					`required_languages` VARCHAR(255) DEFAULT NULL,
-					PRIMARY KEY (`id`),
-					KEY `field_id` (`field_id`)
-				) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;",
-				self::FIELD_TABLE
-			));
+			return Symphony::Database()
+				->create(self::FIELD_TABLE)
+				->ifNotExists()
+				->charset('utf8')
+				->collate('utf8_unicode_ci')
+				->fields([
+					'id' => [
+						'type' => 'int(11)',
+						'auto' => true,
+					],
+					'field_id' => 'int(11)',
+					'default_state' => [
+						'type' => 'enum',
+						'values' => ['on', 'off'],
+						'default' => 'on',
+					],
+					'description' => [
+						'type' => 'varchar(255)',
+						'null' => true,
+					],
+					'default_main_lang' => [
+						'type' => 'enum',
+						'values' => ['yes', 'no'],
+						'default' => 'no',
+					],
+					'required_languages' => [
+						'type' => 'varchar(255)',
+						'null' => true,
+					],
+				])
+				->keys([
+					'id' => 'primary',
+					'field_id' => 'key',
+				])
+				->execute()
+				->success();
 		}
 
 		private function dropFieldTable() {
-			return Symphony::Database()->query(sprintf(
-				"DROP TABLE IF EXISTS `%s`",
-				self::FIELD_TABLE
-			));
+			return Symphony::Database()
+				->drop(self::FIELD_TABLE)
+				->ifExists()
+				->execute()
+				->success();
 		}
 
 
@@ -144,10 +168,11 @@
 		 * @param array $context
 		 */
 		public function dFLSavePreferences($context) {
-			$fields = Symphony::Database()->fetch(sprintf(
-				'SELECT `field_id` FROM `%s`',
-				self::FIELD_TABLE
-			));
+			$fields = Symphony::Database()
+				->select('field_id')
+				->from(self::FIELD_TABLE)
+				->execute()
+				->rows();
 
 			if (is_array($fields) && !empty($fields)) {
 				$new_languages = $context['new_langs'];
@@ -160,10 +185,12 @@
 						$current_columns = Symphony::Database()->fetch("SHOW COLUMNS FROM `$entries_table` LIKE 'value-%';");
 					} catch (DatabaseException $dbe) {
 						// Field doesn't exist. Better remove it's settings
-						Symphony::Database()->query(sprintf(
-								"DELETE FROM `%s` WHERE `field_id` = %s;",
-								self::FIELD_TABLE, $field["field_id"])
-						);
+						Symphony::Database()
+							->delete(self::FIELD_TABLE)
+							->where(['field_id' => $field['field_id']])
+							->execute()
+							->success();
+
 						continue;
 					}
 
@@ -180,14 +207,12 @@
 
 							// If not consolidate option AND column lang_code not in supported languages codes -> drop Column
 							if (!$consolidate && !in_array($lc, $new_languages)) {
-								Symphony::Database()->query(
-									"ALTER TABLE `$entries_table`
-										DROP KEY `value-$lc`;"
-								);
-								Symphony::Database()->query(
-									"ALTER TABLE `$entries_table`
-										DROP COLUMN `value-$lc`;"
-								);
+								Symphony::Database()
+									->alter($entries_table)
+									->dropKey('value-' . $lc)
+									->drop('value-' . $lc)
+									->execute()
+									->success();
 							}
 							else {
 								$valid_columns[] = $column_name;
@@ -199,11 +224,20 @@
 					foreach ($new_languages as $lc) {
 						// if columns for language don't exist, create them
 						if (!in_array("value-$lc", $valid_columns)) {
-							Symphony::Database()->query(
-								"ALTER TABLE `$entries_table`
-									ADD COLUMN `value-$lc` ENUM('yes', 'no') DEFAULT 'no',
-									ADD KEY `value-{$lc}` (`value-{$lc}`);"
-							);
+							Symphony::Database()
+								->alter($entries_table)
+								->add([
+									'value-' . $lc => [
+										'type' => 'enum',
+										'values' => ['yes', 'no'],
+										'default' => 'no',
+									],
+								])
+								->addKey([
+									'value-' . $lc => 'key',
+								])
+								->execute()
+								->success();
 						}
 					}
 				}
