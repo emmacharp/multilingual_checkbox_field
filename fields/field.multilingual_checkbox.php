@@ -5,6 +5,7 @@
 	}
 
 	require_once(EXTENSIONS . '/frontend_localisation/lib/class.FLang.php');
+	require_once(EXTENSIONS . '/multilingual_checkbox_field/lib/class.entryquerymultilingualcheckboxadapter.php');
 
 	Class fieldMultilingual_CheckBox extends FieldCheckbox {
 
@@ -15,6 +16,7 @@
 		public function __construct()
 		{
 			parent::__construct();
+			$this->entryQueryFieldAdapter = new EntryQueryMultilingualCheckboxAdapter($this);
 
 			$this->_name = 'Multilingual Checkbox';
 		}
