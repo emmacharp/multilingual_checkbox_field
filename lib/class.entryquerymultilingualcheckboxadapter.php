@@ -3,7 +3,7 @@
 /**
  *
  */
-class EntryQueryMultilingualCheckboxAdapter extends EntryQueryTextboxAdapter
+class EntryQueryMultilingualCheckboxAdapter extends EntryQueryCheckboxAdapter
 {
     public function getFilterColumns()
     {
