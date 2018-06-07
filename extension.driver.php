@@ -169,7 +169,7 @@
 		 */
 		public function dFLSavePreferences($context) {
 			$fields = Symphony::Database()
-				->select('field_id')
+				->select(['field_id'])
 				->from(self::FIELD_TABLE)
 				->execute()
 				->rows();
