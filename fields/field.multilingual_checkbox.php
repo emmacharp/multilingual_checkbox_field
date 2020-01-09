@@ -321,7 +321,6 @@
 			$langs     = FLang::getLangs();
 
 			$wrapper->setAttribute('class', $wrapper->getAttribute('class') . ' field-multilingual');
-			$container = new XMLElement('div', null, array('class' => 'container'));
 
 			/*------------------------------------------------------------------------------------------------*/
 			/*  Label  */
@@ -374,19 +373,19 @@
 				}
 			}
 
-			$container->appendChild($label);
+			$wrapper->appendChild($label);
 
 			/*------------------------------------------------------------------------------------------------*/
 			/*  Tabs  */
 			/*------------------------------------------------------------------------------------------------*/
 
-			$ul = new XMLElement('ul', null, array('class' => 'tabs'));
+			$ul = new XMLElement('ul', null, array('class' => 'tabs multilingualtabs'));
 			foreach ($langs as $lc) {
 				$li = new XMLElement('li', $lc, array('class' => $lc));
 				$lc === $main_lang ? $ul->prependChild($li) : $ul->appendChild($li);
 			}
 
-			$container->appendChild($ul);
+			$wrapper->appendChild($ul);
 
 			/*------------------------------------------------------------------------------------------------*/
 			/*  Panels  */
@@ -424,7 +423,7 @@
 
 				$div->appendChild($label);
 
-				$container->appendChild($div);
+				$wrapper->appendChild($div);
 			}
 
 			/*------------------------------------------------------------------------------------------------*/
@@ -432,10 +431,7 @@
 			/*------------------------------------------------------------------------------------------------*/
 
 			if ($flagWithError != null) {
-				$wrapper->appendChild(Widget::Error($container, $flagWithError));
-			}
-			else {
-				$wrapper->appendChild($container);
+				$wrapper->appendChild(Widget::Error($label, $flagWithError));
 			}
 		}
 
