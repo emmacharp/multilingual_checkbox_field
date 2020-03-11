@@ -485,7 +485,7 @@
 
 			foreach (FLang::getLangs() as $lc) {
 
-				$data = in_array($field_data[$lc], array('yes', 'no')) ? $field_data[$lc] : null;
+				$data = in_array($field_data[$lc], array('yes', 'no')) ? $field_data[$lc] : 'no';
 
 				$result = array_merge($result, array(
 					"value-$lc"           => (string) $data,
